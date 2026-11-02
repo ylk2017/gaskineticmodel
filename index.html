@@ -3,182 +3,212 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>3-D Mechanical Model of an Ideal Gas</title>
+<title>Fixed-Area Collision-Driven Gas Simulator</title>
+
 <style>
   :root {
     color-scheme: dark;
-    --bg: #09111e;
-    --panel: #121e30;
-    --line: #293a53;
-    --text: #e8f1ff;
-    --muted: #a6b7ce;
-    --cyan: #62ddff;
-    --orange: #ffbd68;
-    --green: #78e5ac;
+    --bg: #09121f;
+    --panel: #132137;
+    --border: #2b405b;
+    --text: #edf4ff;
+    --muted: #acbdd3;
+    --cyan: #6be0ff;
+    --orange: #ffc176;
   }
+
   * { box-sizing: border-box; }
+
   body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
     font: 15px/1.5 system-ui, sans-serif;
   }
+
   header {
-    padding: 22px 26px 14px;
-    max-width: 1500px;
+    max-width: 1400px;
     margin: auto;
+    padding: 22px 24px 15px;
   }
-  h1 { margin: 0 0 5px; font-size: clamp(22px, 3vw, 32px); }
-  h2 { margin: 0 0 12px; font-size: 18px; }
+
+  h1 { margin: 0; font-size: clamp(22px, 3vw, 32px); }
+  h2 { font-size: 18px; margin: 0 0 12px; }
   p { margin: 8px 0; }
   .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+
   main {
-    max-width: 1500px;
+    max-width: 1400px;
     margin: auto;
     padding: 0 24px 24px;
     display: grid;
-    grid-template-columns: 330px minmax(0, 1fr);
-    gap: 18px;
+    grid-template-columns: 315px minmax(0, 1fr);
+    gap: 16px;
   }
+
   .panel {
     background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 16px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
     padding: 18px;
   }
+
   .controls { grid-row: span 2; }
-  .control { margin: 17px 0; }
-  .control-head {
+  .control { margin: 20px 0; }
+
+  .row {
     display: flex;
     justify-content: space-between;
-    gap: 10px;
     align-items: center;
+    gap: 10px;
   }
+
   label { font-weight: 600; }
-  .numeric {
-    width: 86px;
-    padding: 5px 7px;
-    border: 1px solid var(--line);
-    border-radius: 7px;
-    background: #091424;
+
+  input[type="number"] {
+    width: 82px;
+    background: #091525;
     color: var(--cyan);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 5px;
     font: inherit;
     text-align: right;
   }
+
   input[type="range"] {
     width: 100%;
     accent-color: var(--cyan);
-    margin: 9px 0 0;
+    margin-top: 9px;
   }
-  .hint { color: var(--muted); font-size: 12px; }
-  .buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
   button {
-    border: 1px solid #3d5778;
-    border-radius: 8px;
-    background: #203650;
+    background: #254261;
     color: var(--text);
-    padding: 8px 13px;
+    border: 1px solid #416080;
+    border-radius: 8px;
+    padding: 8px 12px;
     font: inherit;
     cursor: pointer;
   }
-  button:hover { background: #2b496c; }
-  .checkbox { display: flex; gap: 8px; margin-top: 15px; align-items: start; }
+
+  button:hover { background: #31577e; }
+
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .note {
+    background: #0c182a;
+    border-left: 3px solid var(--cyan);
+    padding: 10px;
+    margin-top: 17px;
+    font-size: 13px;
+  }
+
   details {
-    margin-top: 18px;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--border);
     padding-top: 12px;
+    margin-top: 18px;
   }
+
   summary { cursor: pointer; color: var(--cyan); }
-  .scene-panel { padding: 0; overflow: hidden; position: relative; }
-  #scene {
-    display: block;
-    width: 100%;
-    height: 530px;
-    touch-action: none;
-    cursor: grab;
-  }
-  #scene:active { cursor: grabbing; }
-  .scene-top {
-    position: absolute;
-    top: 14px;
-    left: 16px;
-    right: 16px;
-    pointer-events: none;
+
+  .scene-panel { padding: 0; overflow: hidden; }
+
+  .scene-heading {
+    padding: 12px 16px;
     display: flex;
     justify-content: space-between;
-    gap: 12px;
-  }
-  .badge {
-    background: #091424db;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 5px 9px;
-    font-size: 12px;
-  }
-  .scene-bottom {
-    padding: 10px 16px;
-    background: #0e1929;
-    border-top: 1px solid var(--line);
+    flex-wrap: wrap;
+    gap: 8px;
     font-size: 12px;
     color: var(--muted);
   }
+
+  #scene {
+    width: 100%;
+    height: 510px;
+    display: block;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  #scene:active { cursor: grabbing; }
+
+  .scene-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
   .stats {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
   }
+
   .stat {
-    background: #0c1728;
-    border: 1px solid var(--line);
+    background: #0c182a;
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 11px;
   }
-  .stat .name { color: var(--muted); font-size: 12px; }
-  .stat .value {
-    font-size: clamp(17px, 2vw, 23px);
+
+  .stat-label { color: var(--muted); font-size: 12px; }
+
+  .stat-value {
     color: var(--cyan);
+    font-size: 21px;
     font-weight: 700;
     margin-top: 3px;
   }
-  .stat .sub { font-size: 11px; color: var(--muted); }
-  .formula {
-    text-align: center;
-    background: #10283a;
-    color: var(--green);
-    padding: 12px;
-    border-radius: 10px;
+
+  .stat-sub { color: var(--muted); font-size: 11px; }
+
+  .equation {
     margin-top: 12px;
-    font-size: 17px;
+    padding: 12px;
+    text-align: center;
+    border-radius: 10px;
+    background: #123145;
+    color: #a0f1c5;
   }
-  .lower {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-top: 16px;
+
+  #history {
+    width: 100%;
+    height: 200px;
+    display: block;
   }
-  #graph { width: 100%; height: 230px; display: block; }
-  ul { padding-left: 19px; margin: 8px 0; }
+
+  ul { padding-left: 20px; }
   li { margin: 7px 0; }
-  .small { font-size: 13px; }
-  @media (max-width: 950px) {
-    main { grid-template-columns: 290px minmax(0, 1fr); padding: 0 12px 16px; }
+
+  @media (max-width: 900px) {
+    main { grid-template-columns: 280px minmax(0, 1fr); }
     .stats { grid-template-columns: repeat(2, 1fr); }
-    .lower { grid-template-columns: 1fr; }
   }
-  @media (max-width: 700px) {
-    main { grid-template-columns: 1fr; }
+
+  @media (max-width: 680px) {
+    main { grid-template-columns: 1fr; padding: 0 12px 18px; }
     .controls { grid-row: auto; }
-    #scene { height: 440px; }
-    header { padding: 18px 16px; }
+    #scene { height: 430px; }
+    header { padding: 18px 14px; }
   }
 </style>
 </head>
+
 <body>
 <header>
-  <h1>3-D Mechanical Model of an Ideal Gas</h1>
+  <h1>Fixed-Area Collision-Driven Gas Simulator</h1>
   <p class="muted">
-    Load controls pressure · Voltage represents temperature ·
-    Beads represent molecules · Piston height determines volume
+    Bead collisions move the piston. The base area remains fixed.
+    Gas volume changes only through piston height.
   </p>
 </header>
 
@@ -187,188 +217,247 @@
     <h2>Experiment controls</h2>
 
     <div class="control">
-      <div class="control-head">
-        <label for="mass">Total piston load (kg)</label>
-        <input class="numeric" id="massNum" type="number"
+      <div class="row">
+        <label for="mass">Piston + load (kg)</label>
+        <input id="massNum" type="number"
                min="0.5" max="20" step="0.1" value="5">
       </div>
-      <input id="mass" type="range" min="0.5" max="20" step="0.1" value="5">
-      <div class="hint">Weight force = load mass × gravitational acceleration.</div>
-    </div>
-
-    <div class="control">
-      <div class="control-head">
-        <label for="area">Piston area (cm²)</label>
-        <input class="numeric" id="areaNum" type="number"
-               min="25" max="250" step="1" value="100">
+      <input id="mass" type="range"
+             min="0.5" max="20" step="0.1" value="5">
+      <div class="small muted">
+        Changes downward weight and piston inertia, not area.
       </div>
-      <input id="area" type="range" min="25" max="250" step="1" value="100">
     </div>
 
     <div class="control">
-      <div class="control-head">
+      <div class="row">
         <label for="voltage">Supply voltage (V)</label>
-        <input class="numeric" id="voltageNum" type="number"
+        <input id="voltageNum" type="number"
                min="1" max="12" step="0.1" value="6">
       </div>
-      <input id="voltage" type="range" min="1" max="12" step="0.1" value="6">
-      <div class="hint">Higher voltage → higher temperature → faster beads.</div>
+      <input id="voltage" type="range"
+             min="1" max="12" step="0.1" value="6">
+      <div class="small muted">
+        Base temperature = 50 K/V × voltage.
+        Beads exchange energy with the base.
+      </div>
     </div>
 
     <div class="control">
-      <div class="control-head">
+      <div class="row">
         <label for="beads">Number of beads</label>
-        <input class="numeric" id="beadsNum" type="number"
+        <input id="beadsNum" type="number"
                min="20" max="400" step="1" value="200">
       </div>
-      <input id="beads" type="range" min="20" max="400" step="1" value="200">
-      <div class="hint">Each bead represents 10¹⁹ gas molecules.</div>
+      <input id="beads" type="range"
+             min="20" max="400" step="1" value="200">
+      <div class="small muted">
+        Adds or removes beads without assigning a new piston position.
+      </div>
     </div>
 
-    <label class="checkbox">
-      <input type="checkbox" id="atmosphere">
-      <span>Include atmospheric pressure outside
-        <span class="hint">(101.325 kPa)</span>
-      </span>
-    </label>
+    <div class="buttons">
+      <button id="pause">Pause</button>
+      <button id="reset">Reset experiment</button>
+    </div>
+
+    <h2 style="margin-top:22px">Teacher camera controls</h2>
 
     <div class="buttons">
-      <button id="pause">Pause motion</button>
-      <button id="reset">Reset</button>
+      <button id="zoomOut" aria-label="Zoom out">− Zoom out</button>
+      <button id="zoomIn" aria-label="Zoom in">+ Zoom in</button>
       <button id="viewReset">Reset view</button>
     </div>
 
+    <p class="small muted">
+      Manual zoom only. Changing the load, voltage, bead count,
+      or piston height never changes the camera scale.
+      Drag the scene to rotate.
+    </p>
+
+    <div class="note">
+      <strong>Fixed piston area:</strong> 100 cm²<br>
+      <strong>Gas volume:</strong> V = A × piston height<br>
+      <strong>Piston motion:</strong> collisions, weight, and damping<br>
+      <strong>Automatic zoom:</strong> disabled
+    </div>
+
     <details>
-      <summary>Calibration and animation</summary>
+      <summary>Motion settings</summary>
 
       <div class="control">
-        <div class="control-head">
-          <label for="alpha">Temperature scale (K/V)</label>
-          <input class="numeric" id="alphaNum" type="number"
-                 min="10" max="100" step="1" value="50">
+        <div class="row">
+          <label for="damping">Damping (N·s/m)</label>
+          <input id="dampingNum" type="number"
+                 min="0" max="40" step="0.5" value="3">
         </div>
-        <input id="alpha" type="range" min="10" max="100" step="1" value="50">
+        <input id="damping" type="range"
+               min="0" max="40" step="0.5" value="3">
+        <div class="small muted">
+          Viscous damping helps oscillations settle.
+          Zero gives an undamped piston.
+        </div>
       </div>
 
       <div class="control">
-        <div class="control-head">
-          <label for="gravity">Gravity (m/s²)</label>
-          <input class="numeric" id="gravityNum" type="number"
-                 min="1" max="20" step="0.01" value="9.81">
-        </div>
-        <input id="gravity" type="range" min="1" max="20" step="0.01" value="9.81">
-      </div>
-
-      <div class="control">
-        <div class="control-head">
-          <label for="speed">Visual motion speed</label>
-          <input class="numeric" id="speedNum" type="number"
+        <div class="row">
+          <label for="speed">Simulation speed</label>
+          <input id="speedNum" type="number"
                  min="0.2" max="3" step="0.1" value="1">
         </div>
-        <input id="speed" type="range" min="0.2" max="3" step="0.1" value="1">
-        <div class="hint">Changes animation only, not temperature or pressure.</div>
+        <input id="speed" type="range"
+               min="0.2" max="3" step="0.1" value="1">
       </div>
     </details>
 
-    <p class="small muted" id="pressureNote"></p>
+    <details>
+      <summary>Physics model</summary>
+      <div class="small muted">
+        <p>
+          Bead–piston collisions transfer momentum and change the
+          piston velocity. Gravity pulls the piston downward.
+          The ideal gas law does not set the piston height.
+        </p>
+        <p>
+          The base is a thermal wall representing the vibrator.
+          Outgoing bead velocities are sampled from the temperature
+          selected by the voltage.
+        </p>
+        <p>
+          Side-wall collisions are elastic. Bead–bead interactions
+          and bead gravity are omitted. The displayed beads are
+          point-like; their drawn sizes do not affect collisions.
+        </p>
+        <p>
+          External pressure is zero. Therefore mg/A is the equilibrium
+          gas pressure when the piston is not resting on the bottom stop.
+        </p>
+        <p>
+          The fixed guide lines are visual references, not an upper stop.
+          If the piston leaves the view, zoom out manually.
+        </p>
+      </div>
+    </details>
   </section>
 
   <section class="panel scene-panel">
-    <div class="scene-top">
-      <span class="badge">3-D bead motion · Drag to rotate · Scroll to zoom</span>
-      <span class="badge" id="stateBadge">Equilibrium model</span>
+    <div class="scene-heading">
+      <span>Fixed area · Manual zoom · Drag to rotate</span>
+      <span id="status" aria-live="polite">Running</span>
     </div>
-    <canvas id="scene" aria-label="Three-dimensional gas simulator"></canvas>
-    <div class="scene-bottom">
-      Cyan: beads · Orange: applied load · Silver: movable piston ·
-      Blue: vibrating base. Dimensions are automatically fitted to the view.
+
+    <canvas id="scene"
+            aria-label="Three-dimensional collision-driven piston with fixed base area">
+    </canvas>
+
+    <div class="scene-footer">
+      Cyan: beads · Silver: piston · Orange: load · Blue: vibrator.
+      Orange bead flashes indicate piston collisions.
+      Window resizing refits the fixed camera; experiment controls do not.
     </div>
   </section>
 
   <section class="panel">
-    <h2>Equilibrium measurements</h2>
+    <h2>Live measurements</h2>
+
     <div class="stats">
       <div class="stat">
-        <div class="name">Load pressure, mg/A</div>
-        <div class="value" id="loadOut"></div>
-        <div class="sub">Pressure due to the piston load</div>
+        <div class="stat-label">Actual piston height</div>
+        <div class="stat-value" id="heightOut"></div>
+        <div class="stat-sub">Determined by forces and collisions</div>
       </div>
+
       <div class="stat">
-        <div class="name">Absolute gas pressure, P</div>
-        <div class="value" id="pressureOut"></div>
-        <div class="sub">Load pressure + external pressure</div>
+        <div class="stat-label">Actual gas volume</div>
+        <div class="stat-value" id="volumeOut"></div>
+        <div class="stat-sub">V = fixed area × height</div>
       </div>
+
       <div class="stat">
-        <div class="name">Temperature, T</div>
-        <div class="value" id="temperatureOut"></div>
-        <div class="sub" id="celsiusOut"></div>
+        <div class="stat-label">Load pressure, mg/A</div>
+        <div class="stat-value" id="loadOut"></div>
+        <div class="stat-sub">Equilibrium pressure requirement</div>
       </div>
+
       <div class="stat">
-        <div class="name">Gas volume, V</div>
-        <div class="value" id="volumeOut"></div>
-        <div class="sub">Space between base and piston</div>
+        <div class="stat-label">Collision pressure</div>
+        <div class="stat-value" id="pressureOut"></div>
+        <div class="stat-sub">Total piston impulse / (area × time)</div>
       </div>
+
       <div class="stat">
-        <div class="name">Piston height, h</div>
-        <div class="value" id="heightOut"></div>
-        <div class="sub">h = V/A</div>
+        <div class="stat-label">Kinetic temperature</div>
+        <div class="stat-value" id="temperatureOut"></div>
+        <div class="stat-sub" id="baseOut"></div>
       </div>
+
       <div class="stat">
-        <div class="name">Amount of gas, n</div>
-        <div class="value" id="molesOut"></div>
-        <div class="sub" id="moleculesOut"></div>
+        <div class="stat-label">Piston vertical velocity</div>
+        <div class="stat-value" id="velocityOut"></div>
+        <div class="stat-sub">Positive = rising; negative = falling</div>
       </div>
     </div>
 
-    <div class="formula">
-      PV = Nk<sub>B</sub>T = nRT
-      &nbsp; · &nbsp;
-      <span id="checkOut"></span>
+    <div class="equation">
+      Equilibrium comparison:
+      PV ≈ N<sub>beads</sub> k<sub>model</sub> T
+      <br>
+      <span id="comparison"></span>
     </div>
 
-    <div class="lower">
-      <div>
-        <h2>Pressure–volume isotherm</h2>
-        <canvas id="graph" aria-label="Pressure-volume graph"></canvas>
-        <p class="hint">
-          Curve: P = NkBT/V for the current temperature and bead count.
-          Orange point: current equilibrium.
+    <p class="small muted">
+      Collision pressure and kinetic temperature are averaged over
+      recent simulated time. The comparison is most meaningful after
+      settling; finite bead counts produce fluctuations.
+    </p>
+
+    <h2 style="margin-top:20px">Actual piston height over time</h2>
+    <canvas id="history" aria-label="Piston height versus simulated time"></canvas>
+
+    <details>
+      <summary>Teaching experiments and calibration</summary>
+      <div class="small">
+        <ul>
+          <li>
+            Increase voltage: the base heats the beads.
+            Stronger collisions tend to raise the piston.
+          </li>
+          <li>
+            Increase load: the piston initially accelerates downward.
+            Compression increases collision frequency.
+          </li>
+          <li>
+            Add beads: more impacts tend to raise the piston.
+            The base width does not change.
+          </li>
+          <li>
+            After settling, compare measured collision pressure with mg/A.
+            These need not match during piston acceleration.
+          </li>
+        </ul>
+
+        <p class="muted">
+          Mechanical calibration: bead mass = 0.001 kg;
+          k<sub>model</sub> = 0.0001 J/K per bead;
+          base temperature = 50 K/V.
+          This effective energy constant replaces molecular k<sub>B</sub>
+          for the macroscopic analogue.
+        </p>
+
+        <p class="muted">
+          For ideal-gas bookkeeping, one bead can represent
+          k<sub>model</sub>/k<sub>B</sub> ≈ 7.24 × 10¹⁸ molecules.
+          Its mechanical mass is chosen independently for visible motion.
+          Voltage-to-temperature calibration is an imposed analogy,
+          not a universal relation for real vibrators.
+        </p>
+
+        <p class="muted">
+          The simulation uses small discrete timesteps and approximate
+          contact-position corrections. It is a classroom model, not
+          a precision molecular-dynamics solver.
         </p>
       </div>
-      <div class="small">
-        <h2>Try these investigations</h2>
-        <ul>
-          <li><strong>Boyle’s law:</strong> keep voltage and bead count fixed.
-            Double the load with external pressure off: volume halves.</li>
-          <li><strong>Charles’s law:</strong> keep load, area, and bead count fixed.
-            Double the voltage: temperature and volume double.</li>
-          <li><strong>Avogadro’s law:</strong> keep pressure and voltage fixed.
-            Double the bead count: volume doubles.</li>
-          <li><strong>Area:</strong> with external pressure off, increasing area
-            lowers pressure and increases volume, while piston height stays
-            unchanged.</li>
-        </ul>
-      </div>
-    </div>
-
-    <details class="small">
-      <summary>Model assumptions and limits</summary>
-      <ul>
-        <li>The piston is frictionless. Its mass is included in the total load.</li>
-        <li>Each control change immediately establishes a new equilibrium.
-          Piston transients and heat-transfer times are not modeled.</li>
-        <li>The cylinder has no height limit in this idealized model.</li>
-        <li>Beads are point-like ideal-gas particles; bead–bead interactions
-          and excluded volume are neglected.</li>
-        <li>Particle speeds follow the √T dependence. Motion is slowed for
-          visibility; particles use a reference molar mass of 28.97 g/mol.</li>
-        <li>Pressure is calculated from the ideal gas law, not estimated from
-          the finite number of displayed collisions.</li>
-        <li>The base vibration is symbolic. The imposed relation T = αU
-          supplies the temperature calibration.</li>
-        <li>With external pressure off, P = mg/A. With atmosphere on,
-          absolute pressure is P = P<sub>atm</sub> + mg/A.</li>
-      </ul>
     </details>
   </section>
 </main>
@@ -378,37 +467,66 @@
 
 const $ = id => document.getElementById(id);
 
-const KB = 1.380649e-23;
-const NA = 6.02214076e23;
-const R = KB * NA;
-const MOLECULES_PER_BEAD = 1e19;
-const MOLAR_MASS = 0.02897;
+// These geometric constants never change with experiment controls.
+const AREA = 0.01;                 // m² = 100 cm²
+const RADIUS = Math.sqrt(AREA / Math.PI);
+const GUIDE_HEIGHT = 0.42;         // Fixed visual guide length
 
-// Physical motion is deliberately slowed for classroom visibility.
-const MOTION_TIME_SCALE = 1e-4;
+// Fixed camera reference. No automatic piston-following or zoom.
+const FIXED_VIEW_HEIGHT = 0.50;
+const FIXED_CAMERA_CENTER_Y = FIXED_VIEW_HEIGHT / 2 - 0.015;
+
+const GRAVITY = 9.81;
+const BEAD_MASS = 0.001;
+const K_MODEL = 0.0001;
+const TEMPERATURE_PER_VOLT = 50;
+const MIN_HEIGHT = 0.006;
+const DT = 0.0005;
+const AVERAGE_WINDOW = 0.8;
 
 const defaults = {
-  mass: 5, area: 100, voltage: 6, beads: 200,
-  alpha: 50, gravity: 9.81, speed: 1
+  mass: 5,
+  voltage: 6,
+  beads: 200,
+  damping: 3,
+  speed: 1
 };
 
 const scene = $("scene");
 const ctx = scene.getContext("2d");
-const graph = $("graph");
-const gctx = graph.getContext("2d");
+const historyCanvas = $("history");
+const hctx = historyCanvas.getContext("2d");
 
-let state;
+let sceneSize = { w: 800, h: 510 };
+let historySize = { w: 600, h: 200 };
+
 let particles = [];
+let pistonHeight = 0.14;
+let pistonVelocity = 0;
+let simulatedTime = 0;
 let paused = false;
-let animationTime = 0;
-let yaw = -0.48;
-let pitch = 0.24;
-let zoom = 1;
-let sceneSize = { w: 800, h: 530 };
-let graphSize = { w: 400, h: 230 };
+let accumulator = 0;
 
-function read(id) {
+let intervalTime = 0;
+let intervalImpulse = 0;
+let intervalTemperatureIntegral = 0;
+
+let measurements = [];
+let heightHistory = [];
+let measuredPressure = 0;
+let measuredTemperature = 300;
+
+// Camera values change only through teacher interactions.
+let yaw = -0.45;
+let pitch = 0.28;
+let zoom = 1;
+
+function value(id) {
   return Number($(id).value);
+}
+
+function baseTemperature() {
+  return value("voltage") * TEMPERATURE_PER_VOLT;
 }
 
 function gaussian() {
@@ -417,138 +535,334 @@ function gaussian() {
          Math.cos(2 * Math.PI * Math.random());
 }
 
-function makeParticle() {
-  const theta = Math.random() * 2 * Math.PI;
-  const r = Math.sqrt(Math.random()) * 0.96;
+function thermalSigma() {
+  return Math.sqrt(K_MODEL * baseTemperature() / BEAD_MASS);
+}
+
+function makeBead() {
+  const angle = Math.random() * Math.PI * 2;
+  const radius = RADIUS * Math.sqrt(Math.random()) * 0.97;
+  const sigma = thermalSigma();
+
   return {
-    x: r * Math.cos(theta),
-    z: r * Math.sin(theta),
-    y: Math.random(),
-    // Dimensionless Gaussian velocity components.
-    vx: gaussian(),
-    vy: gaussian(),
-    vz: gaussian(),
-    shade: Math.random()
+    x: radius * Math.cos(angle),
+    z: radius * Math.sin(angle),
+    y: Math.random() * pistonHeight,
+    vx: gaussian() * sigma,
+    vy: gaussian() * sigma,
+    vz: gaussian() * sigma,
+    flash: 0
   };
 }
 
-function updateModel() {
-  const mass = read("mass");
-  const area = read("area") * 1e-4; // cm² -> m²
-  const voltage = read("voltage");
-  const beadCount = Math.round(read("beads"));
-  const temperature = read("alpha") * voltage;
-  const gravity = read("gravity");
-  const externalPressure = $("atmosphere").checked ? 101325 : 0;
-  const loadPressure = mass * gravity / area;
-  const pressure = externalPressure + loadPressure;
-  const molecules = beadCount * MOLECULES_PER_BEAD;
-  const moles = molecules / NA;
-  const volume = molecules * KB * temperature / pressure;
-  const height = volume / area;
-  const radius = Math.sqrt(area / Math.PI);
+function synchronizeBeadCount() {
+  const target = Math.round(value("beads"));
 
-  state = {
-    mass, area, voltage, beadCount, temperature, gravity,
-    externalPressure, loadPressure, pressure,
-    molecules, moles, volume, height, radius
-  };
+  while (particles.length < target) {
+    particles.push(makeBead());
+  }
 
-  while (particles.length < beadCount) particles.push(makeParticle());
-  if (particles.length > beadCount) particles.length = beadCount;
+  if (particles.length > target) {
+    particles.length = target;
+  }
 
-  $("loadOut").textContent = (loadPressure / 1000).toFixed(3) + " kPa";
-  $("pressureOut").textContent = (pressure / 1000).toFixed(3) + " kPa";
-  $("temperatureOut").textContent = temperature.toFixed(1) + " K";
-  $("celsiusOut").textContent =
-    (temperature - 273.15).toFixed(1) + " °C";
-  $("volumeOut").textContent = (volume * 1000).toFixed(3) + " L";
-  $("heightOut").textContent = (height * 100).toFixed(2) + " cm";
-  $("molesOut").textContent = moles.toFixed(5) + " mol";
-  $("moleculesOut").textContent =
-    "N = " + molecules.toExponential(3) + " molecules";
-  $("checkOut").textContent =
-    "PV / (NkBT) = " +
-    (pressure * volume / (molecules * KB * temperature)).toFixed(4);
-
-  $("pressureNote").textContent = externalPressure === 0
-    ? "Default: zero external pressure, so gas pressure equals weight force divided by piston area."
-    : "Atmosphere enabled: mg/A is gauge pressure. The gas law uses absolute pressure.";
-
-  drawGraph();
+  // Do not change pistonHeight, AREA, RADIUS, or zoom.
 }
 
 Object.keys(defaults).forEach(id => {
   const slider = $(id);
-  const number = $(id + "Num");
+  const numeric = $(id + "Num");
 
-  function apply(value) {
-    let v = Number(value);
-    if (!Number.isFinite(v)) return;
-    v = Math.max(Number(slider.min), Math.min(Number(slider.max), v));
+  function apply(raw) {
+    let n = Number(raw);
+    if (!Number.isFinite(n)) return;
+
+    const min = Number(slider.min);
+    const max = Number(slider.max);
     const step = Number(slider.step);
-    v = Number((Number(slider.min) +
-      Math.round((v - Number(slider.min)) / step) * step).toFixed(5));
-    slider.value = v;
-    number.value = v;
-    updateModel();
+
+    n = Math.max(min, Math.min(max, n));
+    n = min + Math.round((n - min) / step) * step;
+    n = Number(n.toFixed(5));
+
+    slider.value = n;
+    numeric.value = n;
+
+    if (id === "beads") synchronizeBeadCount();
+
+    // Experiment controls never modify camera settings.
+    updateReadouts();
   }
 
   slider.addEventListener("input", () => apply(slider.value));
-  number.addEventListener("change", () => apply(number.value));
+  numeric.addEventListener("change", () => apply(numeric.value));
 });
-
-$("atmosphere").addEventListener("change", updateModel);
 
 $("pause").addEventListener("click", () => {
   paused = !paused;
-  $("pause").textContent = paused ? "Resume motion" : "Pause motion";
-  $("stateBadge").textContent =
-    paused ? "Motion paused · controls remain active" : "Equilibrium model";
+  $("pause").textContent = paused ? "Resume" : "Pause";
+  updateReadouts();
 });
+
+function changeZoom(factor) {
+  zoom = Math.max(0.1, Math.min(2.5, zoom * factor));
+}
+
+$("zoomIn").addEventListener("click", () => changeZoom(1.2));
+$("zoomOut").addEventListener("click", () => changeZoom(1 / 1.2));
 
 $("viewReset").addEventListener("click", () => {
-  yaw = -0.48;
-  pitch = 0.24;
+  yaw = -0.45;
+  pitch = 0.28;
   zoom = 1;
 });
 
-$("reset").addEventListener("click", () => {
-  Object.entries(defaults).forEach(([id, value]) => {
-    $(id).value = value;
-    $(id + "Num").value = value;
+function resetExperiment() {
+  Object.entries(defaults).forEach(([id, n]) => {
+    $(id).value = n;
+    $(id + "Num").value = n;
   });
-  $("atmosphere").checked = false;
-  paused = false;
-  $("pause").textContent = "Pause motion";
-  $("stateBadge").textContent = "Equilibrium model";
-  yaw = -0.48;
-  pitch = 0.24;
-  zoom = 1;
-  particles = [];
-  updateModel();
-});
 
+  // Fixed initial position, not calculated from the gas law.
+  pistonHeight = 0.14;
+  pistonVelocity = 0;
+  simulatedTime = 0;
+  accumulator = 0;
+
+  intervalTime = 0;
+  intervalImpulse = 0;
+  intervalTemperatureIntegral = 0;
+
+  measurements = [];
+  heightHistory = [{ time: 0, height: pistonHeight }];
+
+  measuredPressure = 0;
+  measuredTemperature = baseTemperature();
+
+  particles = [];
+  synchronizeBeadCount();
+
+  paused = false;
+  $("pause").textContent = "Pause";
+
+  // Resetting the experiment preserves the teacher's camera.
+  updateReadouts();
+}
+
+$("reset").addEventListener("click", resetExperiment);
+
+// Thermal-wall outgoing flux distribution:
+// tangential velocities are Gaussian;
+// outgoing normal velocity follows the flux-weighted distribution.
+function collideWithBase(p) {
+  const sigma = thermalSigma();
+
+  p.y = -p.y;
+  p.vy = sigma * Math.sqrt(
+    -2 * Math.log(Math.max(1e-12, Math.random()))
+  );
+  p.vx = gaussian() * sigma;
+  p.vz = gaussian() * sigma;
+}
+
+function physicsStep(dt) {
+  const M = value("mass");
+  const damping = value("damping");
+
+  // Gravity and damping act between collision impulses.
+  pistonVelocity += (
+    -GRAVITY - damping * pistonVelocity / M
+  ) * dt;
+
+  pistonHeight += pistonVelocity * dt;
+
+  if (pistonHeight < MIN_HEIGHT) {
+    pistonHeight = MIN_HEIGHT;
+    if (pistonVelocity < 0) pistonVelocity = 0;
+  }
+
+  let impulseThisStep = 0;
+  let totalSpeedSquared = 0;
+
+  for (const p of particles) {
+    p.flash = Math.max(0, p.flash - dt);
+
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.z += p.vz * dt;
+
+    // Elastic side-wall reflection at the fixed radius.
+    const radialDistance = Math.hypot(p.x, p.z);
+
+    if (radialDistance > RADIUS) {
+      const nx = p.x / radialDistance;
+      const nz = p.z / radialDistance;
+      const outwardSpeed = p.vx * nx + p.vz * nz;
+
+      if (outwardSpeed > 0) {
+        p.vx -= 2 * outwardSpeed * nx;
+        p.vz -= 2 * outwardSpeed * nz;
+      }
+
+      const reflectedRadius = Math.max(
+        0, 2 * RADIUS - radialDistance
+      );
+
+      p.x = nx * reflectedRadius;
+      p.z = nz * reflectedRadius;
+    }
+
+    if (p.y < 0) collideWithBase(p);
+
+    // Elastic bead–piston collision.
+    if (p.y > pistonHeight) {
+      const relativeSpeed = p.vy - pistonVelocity;
+
+      if (relativeSpeed > 0) {
+        const J =
+          2 * relativeSpeed / (1 / BEAD_MASS + 1 / M);
+
+        p.vy -= J / BEAD_MASS;
+        pistonVelocity += J / M;
+
+        impulseThisStep += J;
+        p.flash = 0.045;
+      }
+
+      // Resolve the small numerical penetration.
+      p.y = Math.max(0, 2 * pistonHeight - p.y);
+    }
+
+    totalSpeedSquared +=
+      p.vx * p.vx + p.vy * p.vy + p.vz * p.vz;
+  }
+
+  const kineticTemperature =
+    BEAD_MASS * totalSpeedSquared /
+    (3 * particles.length * K_MODEL);
+
+  simulatedTime += dt;
+  intervalTime += dt;
+  intervalImpulse += impulseThisStep;
+  intervalTemperatureIntegral += kineticTemperature * dt;
+
+  if (intervalTime >= 0.04) {
+    measurements.push({
+      end: simulatedTime,
+      duration: intervalTime,
+      impulse: intervalImpulse,
+      temperatureIntegral: intervalTemperatureIntegral
+    });
+
+    while (
+      measurements.length &&
+      measurements[0].end < simulatedTime - AVERAGE_WINDOW
+    ) {
+      measurements.shift();
+    }
+
+    let duration = 0;
+    let impulse = 0;
+    let temperatureIntegral = 0;
+
+    for (const sample of measurements) {
+      duration += sample.duration;
+      impulse += sample.impulse;
+      temperatureIntegral += sample.temperatureIntegral;
+    }
+
+    measuredPressure = impulse / (AREA * duration);
+    measuredTemperature = temperatureIntegral / duration;
+
+    heightHistory.push({
+      time: simulatedTime,
+      height: pistonHeight
+    });
+
+    while (
+      heightHistory.length &&
+      heightHistory[0].time < simulatedTime - 20
+    ) {
+      heightHistory.shift();
+    }
+
+    intervalTime = 0;
+    intervalImpulse = 0;
+    intervalTemperatureIntegral = 0;
+  }
+}
+
+function updateReadouts() {
+  // Only height changes the volume.
+  const volume = AREA * pistonHeight;
+  const loadPressure = value("mass") * GRAVITY / AREA;
+
+  $("heightOut").textContent =
+    (pistonHeight * 100).toFixed(2) + " cm";
+
+  $("volumeOut").textContent =
+    (volume * 1000).toFixed(3) + " L";
+
+  $("loadOut").textContent =
+    (loadPressure / 1000).toFixed(3) + " kPa";
+
+  $("pressureOut").textContent = measurements.length
+    ? (measuredPressure / 1000).toFixed(3) + " kPa"
+    : "Collecting…";
+
+  $("temperatureOut").textContent =
+    measuredTemperature.toFixed(1) + " K";
+
+  $("baseOut").textContent =
+    "Base setting: " + baseTemperature().toFixed(1) + " K";
+
+  $("velocityOut").textContent =
+    pistonVelocity.toFixed(3) + " m/s";
+
+  const thermalEnergy =
+    particles.length * K_MODEL * measuredTemperature;
+
+  const ratio = thermalEnergy > 0
+    ? measuredPressure * volume / thermalEnergy
+    : 0;
+
+  $("comparison").textContent = measurements.length
+    ? "Measured PV / (Nbeads kmodel T) = " + ratio.toFixed(3)
+    : "Waiting for collision measurements…";
+
+  $("status").textContent = paused
+    ? "Paused"
+    : pistonHeight <= MIN_HEIGHT * 1.001
+      ? "Piston at bottom stop"
+      : "Collision-driven motion";
+}
+
+// Canvas resolution follows the window, not the experiment state.
 function sizeCanvas(canvas) {
   const rect = canvas.getBoundingClientRect();
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
   canvas.width = Math.round(rect.width * dpr);
   canvas.height = Math.round(rect.height * dpr);
+
   canvas.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
+
   return { w: rect.width, h: rect.height };
 }
 
 function resize() {
   sceneSize = sizeCanvas(scene);
-  graphSize = sizeCanvas(graph);
-  if (state) drawGraph();
+  historySize = sizeCanvas(historyCanvas);
 }
-new ResizeObserver(resize).observe(scene);
-new ResizeObserver(resize).observe(graph);
 
-// Camera orbit.
+const resizeObserver = new ResizeObserver(resize);
+resizeObserver.observe(scene);
+resizeObserver.observe(historyCanvas);
+
+// Teacher-operated camera rotation.
 let dragging = false;
-let lastX = 0, lastY = 0;
+let lastX = 0;
+let lastY = 0;
 
 scene.addEventListener("pointerdown", e => {
   dragging = true;
@@ -556,121 +870,92 @@ scene.addEventListener("pointerdown", e => {
   lastY = e.clientY;
   scene.setPointerCapture(e.pointerId);
 });
+
 scene.addEventListener("pointermove", e => {
   if (!dragging) return;
+
   yaw += (e.clientX - lastX) * 0.008;
-  pitch = Math.max(-0.25, Math.min(0.85,
-    pitch + (e.clientY - lastY) * 0.006));
+  pitch = Math.max(
+    -0.2,
+    Math.min(0.85, pitch + (e.clientY - lastY) * 0.006)
+  );
+
   lastX = e.clientX;
   lastY = e.clientY;
 });
+
 scene.addEventListener("pointerup", () => dragging = false);
 scene.addEventListener("pointercancel", () => dragging = false);
+scene.addEventListener("lostpointercapture", () => dragging = false);
+
+// Manual mouse-wheel zoom. There is no automatic zoom anywhere.
 scene.addEventListener("wheel", e => {
   e.preventDefault();
-  zoom = Math.max(0.55, Math.min(2.5,
-    zoom * Math.exp(-e.deltaY * 0.001)));
+  changeZoom(Math.exp(-e.deltaY * 0.001));
 }, { passive: false });
-
-// Elastic reflection at the stationary base and equilibrium piston.
-function reflectVertical(p) {
-  const cell = Math.floor(p.y);
-  let f = p.y - cell;
-  if (Math.abs(cell % 2) === 1) {
-    f = 1 - f;
-    p.vy = -p.vy;
-  }
-  p.y = f;
-}
-
-// Positions x,z are normalized by cylinder radius; y by piston height.
-function moveParticles(dt) {
-  const sigma = Math.sqrt(R * state.temperature / MOLAR_MASS);
-  const motion = sigma * MOTION_TIME_SCALE * read("speed");
-  const radialStep = motion * dt / state.radius;
-  const verticalStep = motion * dt / state.height;
-
-  for (const p of particles) {
-    p.x += p.vx * radialStep;
-    p.z += p.vz * radialStep;
-    p.y += p.vy * verticalStep;
-    reflectVertical(p);
-
-    const distance = Math.hypot(p.x, p.z);
-    if (distance > 1) {
-      const nx = p.x / distance;
-      const nz = p.z / distance;
-      const outwardVelocity = p.vx * nx + p.vz * nz;
-      if (outwardVelocity > 0) {
-        p.vx -= 2 * outwardVelocity * nx;
-        p.vz -= 2 * outwardVelocity * nz;
-      }
-      p.x = nx * 0.999;
-      p.z = nz * 0.999;
-    }
-  }
-}
-
-// Orthographic projection of real three-dimensional coordinates.
-// One common scale is used for x, y and z, preserving proportions.
-function camera() {
-  const { w, h } = sceneSize;
-  const r = state.radius;
-  const thickness = Math.max(0.006, r * 0.12);
-  const upper = state.height + Math.max(0.025, r * 0.7);
-  const lower = -thickness * 3;
-  const span = upper - lower;
-  const scale = Math.min(
-    (w - 125) / (2.8 * r),
-    (h - 115) / (span + 2 * r * Math.abs(Math.sin(pitch)))
-  ) * zoom;
-  const cy = (upper + lower) / 2;
-  const co = Math.cos(yaw), si = Math.sin(yaw);
-  const cp = Math.cos(pitch), sp = Math.sin(pitch);
-
-  return {
-    scale, thickness,
-    project(x, y, z) {
-      const xx = co * x + si * z;
-      const zz = -si * x + co * z;
-      const yy = y - cy;
-      return {
-        x: w / 2 + xx * scale,
-        y: h / 2 + 12 - (cp * yy - sp * zz) * scale,
-        depth: sp * yy + cp * zz
-      };
-    }
-  };
-}
 
 function drawScene() {
   const { w, h } = sceneSize;
-  ctx.clearRect(0, 0, w, h);
-  const bg = ctx.createLinearGradient(0, 0, 0, h);
-  bg.addColorStop(0, "#102039");
-  bg.addColorStop(1, "#080f1c");
-  ctx.fillStyle = bg;
+
+  const background = ctx.createLinearGradient(0, 0, 0, h);
+  background.addColorStop(0, "#10243f");
+  background.addColorStop(1, "#080f1b");
+
+  ctx.fillStyle = background;
   ctx.fillRect(0, 0, w, h);
 
-  const cam = camera();
-  const r = state.radius;
-  const H = state.height;
-  const t = cam.thickness;
+  // IMPORTANT:
+  // Scale is independent of pistonHeight, load, voltage, and bead count.
+  const scale = Math.min(
+    Math.max(1, w - 130) / (RADIUS * 4),
+    Math.max(1, h - 90) / FIXED_VIEW_HEIGHT
+  ) * zoom;
+
+  const cy = Math.cos(yaw);
+  const sy = Math.sin(yaw);
+  const cp = Math.cos(pitch);
+  const sp = Math.sin(pitch);
+
+  function project(x, y, z) {
+    const xx = cy * x + sy * z;
+    const zz = -sy * x + cy * z;
+    const yy = y - FIXED_CAMERA_CENTER_Y;
+
+    return {
+      x: w / 2 + xx * scale,
+      y: h / 2 - (cp * yy - sp * zz) * scale,
+      depth: sp * yy + cp * zz
+    };
+  }
+
   const objects = [];
 
-  function polygon(points, fill, stroke, width = 1) {
-    const projected = points.map(p => cam.project(...p));
+  function polygon(points, fill, stroke) {
+    const projected = points.map(p => project(...p));
+
     objects.push({
-      depth: projected.reduce((sum, p) => sum + p.depth, 0) / projected.length,
+      depth: projected.reduce(
+        (sum, p) => sum + p.depth, 0
+      ) / projected.length,
+
       draw() {
         ctx.beginPath();
-        projected.forEach((p, i) =>
-          i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+
+        projected.forEach((p, i) => {
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        });
+
         ctx.closePath();
-        if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+
+        if (fill) {
+          ctx.fillStyle = fill;
+          ctx.fill();
+        }
+
         if (stroke) {
           ctx.strokeStyle = stroke;
-          ctx.lineWidth = width;
+          ctx.lineWidth = 1;
           ctx.stroke();
         }
       }
@@ -679,67 +964,94 @@ function drawScene() {
 
   function ring(y, radius, fill, stroke) {
     const points = [];
-    for (let i = 0; i < 64; i++) {
-      const a = i * Math.PI * 2 / 64;
-      points.push([radius * Math.cos(a), y, radius * Math.sin(a)]);
+
+    for (let i = 0; i < 48; i++) {
+      const a = i * Math.PI * 2 / 48;
+
+      points.push([
+        radius * Math.cos(a),
+        y,
+        radius * Math.sin(a)
+      ]);
     }
+
     polygon(points, fill, stroke);
   }
 
-  function disk(y, radius, thickness, topColor, sideColor, outline) {
-    const segments = 40;
+  function disk(top, radius, thickness, topColor, sideColor) {
+    const segments = 32;
+
     for (let i = 0; i < segments; i++) {
       const a = i * Math.PI * 2 / segments;
       const b = (i + 1) * Math.PI * 2 / segments;
+
       polygon([
-        [radius * Math.cos(a), y - thickness, radius * Math.sin(a)],
-        [radius * Math.cos(b), y - thickness, radius * Math.sin(b)],
-        [radius * Math.cos(b), y, radius * Math.sin(b)],
-        [radius * Math.cos(a), y, radius * Math.sin(a)]
+        [
+          radius * Math.cos(a),
+          top - thickness,
+          radius * Math.sin(a)
+        ],
+        [
+          radius * Math.cos(b),
+          top - thickness,
+          radius * Math.sin(b)
+        ],
+        [
+          radius * Math.cos(b),
+          top,
+          radius * Math.sin(b)
+        ],
+        [
+          radius * Math.cos(a),
+          top,
+          radius * Math.sin(a)
+        ]
       ], sideColor, null);
     }
-    ring(y, radius, topColor, outline);
-    ring(y - thickness, radius, null, outline);
+
+    ring(top, radius, topColor, "#b6ddff88");
+    ring(top - thickness, radius, null, "#b6ddff66");
   }
 
-  function box(cx, bottom, cz, sx, sy, sz) {
-    const x0 = cx - sx / 2, x1 = cx + sx / 2;
-    const z0 = cz - sz / 2, z1 = cz + sz / 2;
-    const y0 = bottom, y1 = bottom + sy;
-    polygon([[x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0]],
-      "#bb7530", "#ffcc88");
-    polygon([[x1,y0,z0],[x1,y0,z1],[x1,y1,z1],[x1,y1,z0]],
-      "#b76b27", "#ffcc88");
-    polygon([[x1,y0,z1],[x0,y0,z1],[x0,y1,z1],[x1,y1,z1]],
-      "#db9342", "#ffcc88");
-    polygon([[x0,y0,z1],[x0,y0,z0],[x0,y1,z0],[x0,y1,z1]],
-      "#cc8335", "#ffcc88");
-    polygon([[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]],
-      "#ffc16e", "#ffe0ae");
-  }
+  // Fixed base geometry. The thermal boundary remains at y = 0.
+  disk(-0.007, RADIUS * 1.16, 0.012, "#286fac", "#123c65");
+  disk(0, RADIUS * 1.02, 0.004, "#285273", "#16344d");
 
-  // Symbolic vibration occurs below the fixed gas boundary y = 0.
-  const vibration = Math.sin(animationTime *
-    (4 + state.voltage * 1.5) * Math.PI * 2) *
-    Math.min(t * 0.15, 0.0015 * state.voltage / 6);
+  // Symbolic vibration indicator: color pulses, dimensions stay fixed.
+  const pulse = 0.35 + 0.25 * Math.sin(
+    simulatedTime * (5 + value("voltage")) * Math.PI * 2
+  );
 
-  disk(-t + vibration, r * 1.15, t,
-    "#246dad", "#123c68", "#69beff");
-  disk(0, r * 1.03, t * 0.65,
-    "#244b70", "#152e4a", "#6ca9d4");
+  ring(
+    -0.009,
+    RADIUS * 1.17,
+    null,
+    "rgba(107,224,255," + pulse.toFixed(3) + ")"
+  );
 
-  // Transparent cylinder outline.
-  ring(0, r, null, "#8bc9f755");
-  ring(H, r, null, "#8bc9f755");
+  // Cylinder reference guides are fixed in radius and length.
+  ring(0, RADIUS, null, "#93ccff55");
+  ring(GUIDE_HEIGHT, RADIUS, null, "#93ccff33");
 
   for (let i = 0; i < 8; i++) {
     const a = i * Math.PI / 4;
-    const p0 = cam.project(r * Math.cos(a), 0, r * Math.sin(a));
-    const p1 = cam.project(r * Math.cos(a), H, r * Math.sin(a));
+
+    const p0 = project(
+      RADIUS * Math.cos(a),
+      0,
+      RADIUS * Math.sin(a)
+    );
+
+    const p1 = project(
+      RADIUS * Math.cos(a),
+      GUIDE_HEIGHT,
+      RADIUS * Math.sin(a)
+    );
+
     objects.push({
       depth: (p0.depth + p1.depth) / 2,
       draw() {
-        ctx.strokeStyle = "#8bc9f735";
+        ctx.strokeStyle = "#93ccff33";
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(p0.x, p0.y);
@@ -749,177 +1061,243 @@ function drawScene() {
     });
   }
 
-  for (const p of particles) {
-    const q = cam.project(p.x * r, p.y * H, p.z * r);
-    const beadRadius = Math.max(1.6, Math.min(4.2, cam.scale * r * 0.055));
+  for (const bead of particles) {
+    const p = project(bead.x, bead.y, bead.z);
+    const radius = Math.max(1.2, Math.min(4, scale * 0.0018));
+
     objects.push({
-      depth: q.depth,
+      depth: p.depth,
       draw() {
+        ctx.fillStyle = bead.flash > 0 ? "#ffc176" : "#75e2ff";
         ctx.beginPath();
-        ctx.arc(q.x, q.y, beadRadius, 0, Math.PI * 2);
-        ctx.fillStyle = p.shade > 0.5 ? "#65dcff" : "#b2f2ff";
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
         ctx.fill();
-        ctx.beginPath();
-        ctx.arc(q.x - beadRadius * 0.25, q.y - beadRadius * 0.25,
-          beadRadius * 0.28, 0, Math.PI * 2);
+
         ctx.fillStyle = "#ffffffaa";
+        ctx.beginPath();
+        ctx.arc(
+          p.x - radius * 0.25,
+          p.y - radius * 0.25,
+          radius * 0.25,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
       }
     });
   }
 
-  // Piston underside is exactly at y = H.
-  disk(H + t, r * 1.025, t,
-    "#cad8e4", "#657c92", "#eef7ff");
+  // The piston has a fixed radius.
+  // Only its vertical position follows the physics.
+  disk(
+    pistonHeight + 0.006,
+    RADIUS * 1.025,
+    0.006,
+    "#d4e2ee",
+    "#71879d"
+  );
 
-  // Stack of weights is symbolic; numeric load determines pressure.
-  const count = Math.min(5, Math.max(1, Math.ceil(state.mass / 4)));
-  const weightHeight = r * 0.105;
-  for (let i = 0; i < count; i++) {
-    box(0, H + t + i * weightHeight, 0,
-      r * 1.15, weightHeight, r * 0.9);
+  // Symbolic load disks; their mass is supplied by the load control.
+  const weightCount = Math.max(
+    1, Math.min(5, Math.ceil(value("mass") / 4))
+  );
+
+  for (let i = 0; i < weightCount; i++) {
+    disk(
+      pistonHeight + 0.013 + i * 0.007,
+      RADIUS * 0.62,
+      0.007,
+      "#ffc176",
+      "#ac6c2e"
+    );
   }
 
   objects.sort((a, b) => a.depth - b.depth);
-  for (const object of objects) object.draw();
+  objects.forEach(object => object.draw());
 
-  function label(text, point, dx, dy, color) {
-    const p = cam.project(...point);
-    const x = Math.max(12, Math.min(w - 145, p.x + dx));
-    const y = Math.max(65, Math.min(h - 18, p.y + dy));
+  function label(text, coordinates, dx, dy, color) {
+    const p = project(...coordinates);
+
+    // Do not clamp an off-screen piston label into the scene.
+    if (p.y < 0 || p.y > h) return;
+
     ctx.font = "12px system-ui";
+
+    const textWidth = ctx.measureText(text).width;
+    const x = Math.max(
+      12, Math.min(w - textWidth - 12, p.x + dx)
+    );
+    const y = Math.max(24, Math.min(h - 70, p.y + dy));
+
     ctx.strokeStyle = color;
-    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(p.x, p.y);
     ctx.lineTo(x, y - 4);
     ctx.stroke();
-    ctx.fillStyle = "#081321dd";
-    ctx.fillRect(x - 5, y - 17, ctx.measureText(text).width + 10, 23);
+
+    ctx.fillStyle = "#081321e8";
+    ctx.fillRect(x - 5, y - 17, textWidth + 10, 23);
+
     ctx.fillStyle = color;
     ctx.fillText(text, x, y);
   }
 
-  label("Load: " + state.mass.toFixed(1) + " kg",
-    [0, H + t + count * weightHeight, 0], 40, -20, "#ffca85");
-  label("Movable piston",
-    [r * 0.8, H + t / 2, 0], 28, 12, "#dae8f4");
-  label("Vibrator: " + state.voltage.toFixed(1) + " V",
-    [r, -t, 0], 25, 30, "#81caff");
+  label(
+    "Load: " + value("mass").toFixed(1) + " kg",
+    [0, pistonHeight + 0.015 + weightCount * 0.007, 0],
+    50, -18, "#ffc176"
+  );
+
+  label(
+    "Collision-driven piston",
+    [RADIUS * 0.8, pistonHeight, 0],
+    35, 14, "#dfebf7"
+  );
+
+  label(
+    "Vibrator: " + value("voltage").toFixed(1) + " V",
+    [RADIUS, -0.005, 0],
+    30, 28, "#83cfff"
+  );
+
+  const pistonScreen = project(0, pistonHeight, 0);
+
+  if (pistonScreen.y < 20 || pistonScreen.y > h - 20) {
+    ctx.font = "13px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#ffc176";
+    ctx.fillText(
+      "Piston outside view — zoom out manually",
+      w / 2, 25
+    );
+    ctx.textAlign = "left";
+  }
 
   ctx.font = "13px system-ui";
-  ctx.fillStyle = "#a8bdd7";
+  ctx.fillStyle = "#b0c4dc";
+
   ctx.fillText(
-    "Gas height = " + (H * 100).toFixed(2) + " cm", 17, h - 39);
+    "Fixed area: 100 cm² · Beads: " + particles.length +
+    " · Manual zoom: " + Math.round(zoom * 100) + "%",
+    16, h - 38
+  );
+
   ctx.fillText(
-    state.beadCount + " beads · T = " + state.temperature.toFixed(1) + " K",
-    17, h - 18);
+    "Time: " + simulatedTime.toFixed(1) +
+    " s · Volume changes through height only",
+    16, h - 17
+  );
 }
 
-function drawGraph() {
-  if (!state) return;
-  const { w, h } = graphSize;
-  gctx.clearRect(0, 0, w, h);
+function drawHistory() {
+  const { w, h } = historySize;
+  hctx.clearRect(0, 0, w, h);
 
-  const left = 57, right = 17, top = 20, bottom = 41;
+  const left = 50;
+  const right = 15;
+  const top = 18;
+  const bottom = 35;
+
   const pw = Math.max(1, w - left - right);
   const ph = Math.max(1, h - top - bottom);
 
-  // Axes adapt to the equilibrium point.
-  const vmax = state.volume * 3;
-  const pmax = state.pressure * 3;
-  const X = v => left + v / vmax * pw;
-  const Y = p => top + ph - p / pmax * ph;
+  const end = Math.max(20, simulatedTime);
+  const start = end - 20;
 
-  function tickText(value) {
-    if (value === 0) return "0";
-    return value < 0.01 || value >= 10000
-      ? value.toExponential(1)
-      : Number(value.toPrecision(3)).toString();
+  let maxHeight = 0.2;
+
+  for (const p of heightHistory) {
+    maxHeight = Math.max(maxHeight, p.height * 1.15);
   }
 
-  gctx.font = "10px system-ui";
-  for (let i = 0; i <= 3; i++) {
-    const v = vmax * i / 3;
-    const p = pmax * i / 3;
-    gctx.strokeStyle = "#293a53";
-    gctx.beginPath();
-    gctx.moveTo(X(v), top);
-    gctx.lineTo(X(v), top + ph);
-    gctx.moveTo(left, Y(p));
-    gctx.lineTo(left + pw, Y(p));
-    gctx.stroke();
+  const X = t => left + (t - start) / 20 * pw;
+  const Y = height => top + ph - height / maxHeight * ph;
 
-    gctx.fillStyle = "#a6b7ce";
-    gctx.textAlign = "center";
-    gctx.fillText(tickText(v * 1000), X(v), top + ph + 17);
-    gctx.textAlign = "right";
-    gctx.fillText(tickText(p / 1000), left - 6, Y(p) + 3);
+  hctx.font = "10px system-ui";
+
+  for (let i = 0; i <= 4; i++) {
+    const yValue = maxHeight * i / 4;
+    const time = start + 20 * i / 4;
+
+    hctx.strokeStyle = "#2b405b";
+    hctx.beginPath();
+    hctx.moveTo(left, Y(yValue));
+    hctx.lineTo(left + pw, Y(yValue));
+    hctx.moveTo(X(time), top);
+    hctx.lineTo(X(time), top + ph);
+    hctx.stroke();
+
+    hctx.fillStyle = "#acbdd3";
+    hctx.textAlign = "right";
+    hctx.fillText(
+      (yValue * 100).toFixed(1),
+      left - 6, Y(yValue) + 3
+    );
+
+    hctx.textAlign = "center";
+    hctx.fillText(
+      time.toFixed(0),
+      X(time), top + ph + 17
+    );
   }
 
-  gctx.strokeStyle = "#9cb6d1";
-  gctx.beginPath();
-  gctx.moveTo(left, top);
-  gctx.lineTo(left, top + ph);
-  gctx.lineTo(left + pw, top + ph);
-  gctx.stroke();
+  hctx.save();
+  hctx.beginPath();
+  hctx.rect(left, top, pw, ph);
+  hctx.clip();
 
-  const constant = state.molecules * KB * state.temperature;
-  gctx.save();
-  gctx.beginPath();
-  gctx.rect(left, top, pw, ph);
-  gctx.clip();
-  gctx.strokeStyle = "#62ddff";
-  gctx.lineWidth = 2;
-  gctx.beginPath();
-  for (let i = 0; i <= 300; i++) {
-    const v = vmax * (0.025 + 0.975 * i / 300);
-    const x = X(v), y = Y(constant / v);
-    i === 0 ? gctx.moveTo(x, y) : gctx.lineTo(x, y);
-  }
-  gctx.stroke();
+  hctx.strokeStyle = "#6be0ff";
+  hctx.lineWidth = 2;
+  hctx.beginPath();
 
-  const px = X(state.volume), py = Y(state.pressure);
-  gctx.setLineDash([4, 4]);
-  gctx.strokeStyle = "#ffbd6877";
-  gctx.beginPath();
-  gctx.moveTo(left, py);
-  gctx.lineTo(px, py);
-  gctx.lineTo(px, top + ph);
-  gctx.stroke();
-  gctx.setLineDash([]);
+  heightHistory.forEach((point, i) => {
+    if (i === 0) {
+      hctx.moveTo(X(point.time), Y(point.height));
+    } else {
+      hctx.lineTo(X(point.time), Y(point.height));
+    }
+  });
 
-  gctx.fillStyle = "#ffbd68";
-  gctx.beginPath();
-  gctx.arc(px, py, 5, 0, 2 * Math.PI);
-  gctx.fill();
-  gctx.restore();
+  hctx.stroke();
+  hctx.restore();
 
-  gctx.fillStyle = "#c5d8ef";
-  gctx.textAlign = "left";
-  gctx.fillText("P (kPa)", 4, 11);
-  gctx.textAlign = "center";
-  gctx.fillText("Volume (L)", left + pw / 2, h - 5);
+  hctx.fillStyle = "#c4d5ea";
+  hctx.textAlign = "left";
+  hctx.fillText("h (cm)", 3, 11);
+  hctx.textAlign = "center";
+  hctx.fillText("Simulated time (s)", left + pw / 2, h - 4);
 }
 
-let lastTime = performance.now();
-function frame(now) {
-  const dt = Math.min((now - lastTime) / 1000, 0.04);
-  lastTime = now;
+let lastFrameTime = performance.now();
+let lastReadoutTime = 0;
 
-  if (state && !paused) {
-    animationTime += dt;
-    // Small substeps improve boundary reflections in shallow gas volumes.
-    const steps = 8;
-    for (let i = 0; i < steps; i++) moveParticles(dt / steps);
+function animate(now) {
+  const realDt = Math.min((now - lastFrameTime) / 1000, 0.05);
+  lastFrameTime = now;
+
+  if (!paused) {
+    accumulator += realDt * value("speed");
+
+    while (accumulator >= DT) {
+      physicsStep(DT);
+      accumulator -= DT;
+    }
   }
-  if (state) drawScene();
-  requestAnimationFrame(frame);
+
+  drawScene();
+
+  if (now - lastReadoutTime > 100) {
+    updateReadouts();
+    drawHistory();
+    lastReadoutTime = now;
+  }
+
+  requestAnimationFrame(animate);
 }
 
 resize();
-updateModel();
-requestAnimationFrame(frame);
+resetExperiment();
+requestAnimationFrame(animate);
 </script>
 </body>
 </html>
